@@ -1,0 +1,179 @@
+import java.util.Arrays;
+class No {
+    int chave;
+    No esquerda;
+    No direita;
+
+    public No(int chave) {
+        this.chave = chave;
+        this.esquerda = null;
+        this.direita = null;
+    }
+}
+
+class ArvoreBinariaBusca {
+    No raiz;
+
+    public void inserir(int chave) {
+        raiz = inserirRecursivo(raiz, chave);
+    }
+
+    private No inserirRecursivo(No noAtual, int chave) {
+        if (noAtual == null) {
+            return new No(chave);
+        }
+
+        if (chave < noAtual.chave) {
+            noAtual.esquerda = inserirRecursivo(noAtual.esquerda, chave);
+        } else if (chave > noAtual.chave) {
+            noAtual.direita = inserirRecursivo(noAtual.direita, chave);
+        }
+        return noAtual;
+    }
+    
+    public void percursoPreOrdem() {
+        System.out.print("Estrutura (Pré-Ordem): ");
+        percursoPreOrdemRecursivo(raiz);
+        System.out.println();
+    }
+
+    private void percursoPreOrdemRecursivo(No no) {
+        if (no != null) {
+            System.out.print(no.chave + " ");
+            percursoPreOrdemRecursivo(no.esquerda);
+            percursoPreOrdemRecursivo(no.direita);
+        }
+    }
+}
+
+class NoAVL {
+    int chave;
+    int altura; 
+    NoAVL esquerda;
+    NoAVL direita;
+
+    public NoAVL(int chave) {
+        this.chave = chave;
+        this.altura = 1; 
+        this.esquerda = null;
+        this.direita = null;
+    }
+}
+
+class ArvoreAVL {
+    NoAVL raiz;
+
+    private int altura(NoAVL no) {
+        return (no == null) ? 0 : no.altura;
+    }
+
+    private int max(int a, int b) {
+        return (a > b) ? a : b;
+    }
+
+    private void atualizarAltura(NoAVL no) {
+        no.altura = 1 + max(altura(no.esquerda), altura(no.direita));
+    }
+
+    private int getFatorBalanceamento(NoAVL no) {
+        return (no == null) ? 0 : altura(no.esquerda) - altura(no.direita);
+    }
+
+    private NoAVL rotacaoDireita(NoAVL y) {
+        NoAVL x = y.esquerda;
+        NoAVL T2 = x.direita;
+        x.direita = y;
+        y.esquerda = T2;
+        atualizarAltura(y);
+        atualizarAltura(x);
+        return x;
+    }
+
+    private NoAVL rotacaoEsquerda(NoAVL x) {
+        NoAVL y = x.direita;
+        NoAVL T2 = y.esquerda;
+        y.esquerda = x;
+        x.direita = T2;
+        atualizarAltura(x);
+        atualizarAltura(y);
+        return y;
+    }
+
+    public void inserir(int chave) {
+        raiz = inserirRecursivo(raiz, chave);
+    }
+
+    private NoAVL inserirRecursivo(NoAVL noAtual, int chave) {
+        if (noAtual == null) return new NoAVL(chave);
+        if (chave < noAtual.chave) {
+            noAtual.esquerda = inserirRecursivo(noAtual.esquerda, chave);
+        } else if (chave > noAtual.chave) {
+            noAtual.direita = inserirRecursivo(noAtual.direita, chave);
+        } else {
+            return noAtual;
+        }
+
+        atualizarAltura(noAtual);
+        int balanceamento = getFatorBalanceamento(noAtual);
+
+        if (balanceamento > 1 && chave < noAtual.esquerda.chave) return rotacaoDireita(noAtual);        // LL
+        if (balanceamento < -1 && chave > noAtual.direita.chave) return rotacaoEsquerda(noAtual);       // RR
+        
+        if (balanceamento > 1 && chave > noAtual.esquerda.chave) {                                      // LR
+            noAtual.esquerda = rotacaoEsquerda(noAtual.esquerda);
+            return rotacaoDireita(noAtual);
+        }
+
+        if (balanceamento < -1 && chave < noAtual.direita.chave) {                                      // RL
+            noAtual.direita = rotacaoDireita(noAtual.direita);
+            return rotacaoEsquerda(noAtual);
+        }
+
+        return noAtual;
+    }
+    
+    public void percursoPreOrdem() {
+        System.out.print("Estrutura (Pré-Ordem): ");
+        percursoPreOrdemRecursivo(raiz);
+        System.out.println();
+    }
+
+    private void percursoPreOrdemRecursivo(NoAVL no) {
+        if (no != null) {
+            System.out.print(no.chave + "(h:" + no.altura + ") ");
+            percursoPreOrdemRecursivo(no.esquerda);
+            percursoPreOrdemRecursivo(no.direita);
+        }
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        int[] elementos = {1, 2, 3, 10, 4, 5, 9, 7, 8, 6};
+        System.out.println("Elementos a serem inseridos na ordem: " + Arrays.toString(elementos));
+        System.out.println("--------------------------------------------------");
+
+        ArvoreBinariaBusca bst = new ArvoreBinariaBusca();
+        for (int e : elementos) {
+            bst.inserir(e);
+        }
+        
+        System.out.println("ÁRVORE BINÁRIA DE BUSCA (BST):");
+        bst.percursoPreOrdem();
+        
+        ArvoreAVL avl = new ArvoreAVL();
+        for (int e : elementos) {
+            avl.inserir(e);
+        }
+        
+        System.out.println("\nÁRVORE AVL:");
+        avl.percursoPreOrdem();
+        
+        System.out.println("\n--------------------------------------------------");
+        System.out.println("ANÁLISE DA DIFERENÇA:");
+        System.out.println("1. Raiz da BST: " + bst.raiz.chave);
+        System.out.println("2. Raiz da AVL: " + avl.raiz.chave + "(h:" + avl.raiz.altura + ")");
+        System.out.println("3. Altura da BST (Pior Caso de busca): O(n) ou ≈" + (bst.raiz.chave == 1 ? "10" : "6-8"));
+        System.out.println("4. Altura da AVL (Pior Caso de busca): O(log n) ≈ 4 (Garantido)");
+    }
+}
